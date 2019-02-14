@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Issue Tracker</title>
+    <meta name="description" content="Issue Tracker">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/public/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Encode+Sans+Condensed|Nanum+Gothic" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" 
+          integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+  </head>
+  <body>
+    <div id="container">
+      <nav id="navbar">
+        <header id="project">Projects</header>
+        <ul id="projList">
+        </ul>
+
+        <center>
+          <form id="newProject" method="post" action="/api/projects/">
+            <input type="text" name="projectName" placeholder="*Project Name" style="width: 95%; margin-bottom: 3px;" required><br>
+            <button id="addProjBtn" type="submit">Add Project</button>
+            <button id="deleteProjBtn">Delete Project</button>
+          </form>
+        </center>
+      </nav>
+
+      <div id="pageHeader">Issue Tracker</div>
+
+      <div id="controls" style="display: none">
+        <div>
+          <b>Filters</b>          
+          <form id="filterForm" method="get">
+            <div id="filters">
+              <div class="column">Created By:&nbsp;&nbsp; <input type="text" id="filter_created_by" name="created_by"></div>
+              <div class="column">Title: <input type="text" id="filter_title" name="issue_title"></div>
+              <div class="column">Status Text: <input type="text" id="filter_status_text" name="status_text"></div>
+              <div class="column">Assigned To: <input type="text" id="filter-assigned_to" name="assigned_to"></div>
+              <div class="column">Text: <input type="text" id="filter_text" name="issue_text"></div>
+              <div class="column">
+                <input type="radio" name="open" value="true">Open
+                <input type="radio" name="open" value="false">Closed
+              </div>
+            </div>
+          </form>
+        </div>
+        <div id="controlBtns">
+          <button type="submit" id="findBtn" form="filterForm">Find</button>
+          <button type="reset" id="findReset" form="filterForm">Clear Filters</button>
+          <button id="newBtn">New Issue</button>
+        </div>
+      </div>
+
+      <section id="issueSection">
+        <header id="projectTitle">Select a Project to add or view issues</header>
+        <center>
+          <div id="totalIssues"></div>
+          <div>
+            <table id="issueDisplay">
+            </table>
+          </div>
+        </center>
+      </section>
+    </div>
+    
+    <!-- //// popup box //// -->
+    <center>
+      <div id="issueBox">
+        <div id="issueBoxHeader">
+          <span class="close">&times;</span>
+          <h3>Submit a new issue:</h3>
+        </div>
+        <div id="issueForm">
+          <form id="newIssue" method="post">
+            <div id="formContainer">
+              <div class="label issue_id">
+                <label for="issue_id">Id:</label>
+              </div>
+              <div class="issue_id" style="text-align:left">
+                <span id="issue_id" style="padding-left: 10px"></span>
+              </div>
+              <div class="label">
+                <label for="issue_title">*Title:</label>
+              </div>
+              <div>
+                <input type="text" id="issue_title" name="issue_title" placeholder="*Title" required>  
+              </div>
+              <div class="label">
+                <label for="issue_text">*Text:</label>
+              </div>
+              <div>
+                <textarea type="text" id="issue_text" name="issue_text" placeholder="*Text" style="height: 100px;" required></textarea>  
+              </div>
+              <div class="label">
+                <label for="created_by">*Created By:</label>
+              </div>
+              <div>
+                <input type="text" id ="created_by" name="created_by" placeholder="*Created by" required>
+              </div>
+              <div class="label">
+                <label for="assigned_to">Assigned To:</label>
+              </div>
+              <div>
+                <input type="text" id="assigned_to" name="assigned_to" placeholder="(opt) Assigned to">  
+              </div>
+              <div class="label">
+                <label for="status_text">Status Text:</label>
+              </div>
+              <div>
+                <input type="text" id="status_text" name="status_text" placeholder="(opt) Status text">  
+              </div>              
+            </div>
+            <span id="openCloseRadio" style="display: none">
+              <br>
+                <input type="radio" id="open" name="open" value="true">Open
+                <input type="radio" id="close" name="open" value="false">Closed
+            </span>
+            <br><button type="reset" id="issue_reset">Clear</button>
+            <button type="submit" id="issue_submit">Submit Issue</button>
+          </form>
+        </div>
+      </div>
+    </center>
+    
+    <!--/////// Custom Dialog boxes  ////// -->
+    <div id="dialogOverlay"></div>
+    <div id="dialogBox">  
+        <div id="dialogBoxHead"></div>
+        <div id="dialogBoxBody"></div>
+        <div id="dialogBoxFoot"></div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-2.2.1.min.js"
+            integrity="sha256-gvQgAFzTH6trSrAWoH1iPo9Xc96QxSZ3feW6kem+O00="
+            crossorigin="anonymous"></script>
+    <script src="/util/dialog.js"></script>
+
+    <script>
+      $(document).ready(function() {
+        
+        let projId = '';
+        let currentProject;
+        let currentUrl;
+        
+        //Get all the projects
+        loadProjects();
+
+        function loadProjects() {
+          $.ajax({
+            type: "GET",
+            url: "/api/projects",
+          })
+            .done(function(data) {
+              data.forEach( ele => {
+                $("#projList").append('<a class="projLink" href="#" projId="' + ele._id + '"><li>' + ele.projectName + '</li></a>');
+              })
+            })
+           .fail (function(xhr) { 
+              Alert.render('Error', xhr.responseJSON.error);
+            })
+        };
+
+        function displayIssues(dataParams) {
+            //clear the table
+            $("#issueDisplay").empty();
+            if (!dataParams)
+              $('#filterForm')[0].reset();  // Reset all filter form data
+          
+            $.ajax({
+              type: "GET",
+              url: currentUrl,
+              data: dataParams
+            })
+              .done(function(data) {
+              
+                let title = (!dataParams) ? 'All issues' : 'Selected issues';
+                if (!data.length)  //no issues found
+                  if (!dataParams)
+                    title = 'No issues found';
+                  else 
+                    title = 'No issues found for the selected criteria';
+                $('#projectTitle').html(title + ' for: ' + '<b>' + currentProject + '</b>');
+                if (data.length > 0)
+                  $('#totalIssues').html('(' + data.length + ' issues)');
+                else
+                  $('#totalIssues').html('');
+            
+                data.forEach( ele => {
+                  let openStatus = ele.open ? 'open' : 'closed';
+                  let doc = 
+                    '<tr class="issue ' + openStatus + '">' + 
+                      '<td align="left">' + 
+                        '<p id="title">' + ele.issue_title + ' -  (' + openStatus + ')</p>' + 
+                        '<p class="small">id: ' + ele._id + '</p>' + 
+                        '<p>' + ele.issue_text + '</p>' +
+                        '<p style="margin-bottom: 7px">' + ele.status_text + '</p>' +
+                        '<p class="small"><span class="bold">Created by: </span>' + ele.created_by + 
+                        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Assigned to: </span>' + ele.assigned_to + '</p>' +
+                        '<p class="small"><span class="bold">Created on: </span>' + (new Date(ele.created_on)).toLocaleString("en-US") + 
+                        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="bold">Last updated: </span>' + (new Date(ele.updated_on)).toLocaleString("en-US") + '</p>' +
+                      '</td>' + 
+                      '<td align="center">';
+                    if (openStatus === 'open')
+                        doc += '<a href="#" class="closeIssue" title="Close Issue" id="' + ele._id + '"><i class="fas fa-clipboard-check fa-lg icons"></i></a><br><br>';
+
+                    doc += '<a href="#" class="updateIssue" title = "Update Issue" id="' + ele._id + '"><i class="fa fa-edit fa-lg icons"></i></a><br><br>' +  
+                        '<a href="#" class="deleteIssue" title="Delete Issue" id="' + ele._id + '"><i class="fa fa-trash fa-lg icons"></i></a>' +     
+                      '</td>' + 
+                    '</tr>';
+
+                  $('#issueDisplay').append(doc);
+                })
+              })
+
+              .fail (function(xhr) { 
+                Alert.render('Error', xhr.responseJSON.error);
+              })
+          };
+        
+
+        // Display issues for the selected project
+        $(document).on('click','.projLink', function(e) {
+            $("#controls").show();
+            projId = $(this).attr("projId");
+            currentProject = $(this).text();
+            currentUrl = "/api/issues/" + currentProject;
+         
+            //Get the issues for the project
+            displayIssues();
+
+            // Stop normal link behavior
+            return false;
+        });                        
+        
+        //Add new project        
+        $('#newProject').submit(function(e){
+          e.preventDefault();
+
+          //trim all fields
+          $('#newProject :input').each(function(){
+             $(this).val($.trim($(this).val()))
+          });
+
+          $.ajax({
+            type: "POST",
+            url: "/api/projects/",
+            data: $(this).serialize()
+          })
+            .done (function(data) {
+              window.location.reload(true);
+            })
+            .fail (function(xhr) { 
+              Alert.render('Error', xhr.responseJSON.error);
+            })
+        });
+        
+        //Delete project
+        $('#deleteProjBtn').on('click', e => {
+          e.preventDefault();
+          if (projId === '')
+            Alert.render('Error', 'Please select a project to delete');
+          else 
+            Confirm.render('Are you sure you want to delete this project and all its issues?', deleteProject, projId);
+        });
+
+        function deleteProject(id) {
+          $.ajax({
+              type: "DELETE",
+              url: "/api/projects/",
+              data: {_id: id}
+            })
+              .done (function(data) { 
+                Alert.render('Project Deleted', JSON.stringify(data)); 
+                resetPage();
+                loadProjects();
+              })
+              .fail (function(xhr) { 
+                Alert.render('Error', xhr.responseJSON.error);
+              })
+        }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+        function resetPage() {  //reset page after project deletion
+          $("#projList").empty();
+          $("#controls").hide();
+          $("#projectTitle").html('Select a Project to add or view issues');
+          $('#totalIssues').html('');
+          $("#issueDisplay").empty();
+        }
+        
+        function resetForm() {
+          // Reset all pop up form data
+          $('#newIssue')[0].reset();
+          $(".issue_id").hide();
+          $("input[type='hidden']").remove();
+          $("#openCloseRadio").hide();
+          $("#issue_reset").show();
+          
+          $("#dialogOverlay").show();
+          $("#dialogOverlay").height($(window).height());
+          $("#issueBox").show();
+        }
+
+        function populateIssue(data) {
+          $("#issueBoxHeader h3").text("Update Issue");
+          $(".issue_id").show();
+          $("#issue_id").text(data[0]._id);
+          $('#newIssue').append('<input type="hidden" name="_id" value="' + data[0]._id + '">');
+          $("#issue_title").val(data[0].issue_title);
+          $("#issue_text").val(data[0].issue_text)
+          $("#created_by").val(data[0].created_by);
+          $("#assigned_to").val(data[0].assigned_to);
+          $("#status_text").val(data[0].status_text);
+          $("#openCloseRadio").show();
+          if (data[0].open)
+            $("#open").prop("checked", true);
+          else
+            $("#close").prop("checked", true);
+          $("#issue_submit").text("Update");
+          $("#issue_reset").hide();
+        }
+
+        //Bring up Issue Box popup
+        $("#newBtn").on('click', function(e) {
+          e.stopPropagation();
+          resetForm();
+          $("#issueBoxHeader h3").text("Submit a new issue");
+          $("#issue_submit").text("Submit Issue");
+        });
+
+        // When the user clicks on <span> (x), close the popup
+        $(".close").on('click', function(e) {
+          e.preventDefault();
+          $("#issueBox").hide();
+          $("#dialogOverlay").hide();
+        });
+
+        // When the user clicks anywhere outside of the popup, close it
+        $(window).on('click', e => {
+          if($(e.target).closest('#issueBox').length == 0 && $('#issueBox').is(':visible')) {
+             $("#issueBox").hide();
+             $("#dialogOverlay").hide();
+          }
+        });
+                         
+        //Add new issue / update issue
+        $('#newIssue').submit( function(e) {
+          e.preventDefault();
+          
+          //trim all fields
+          $('#newIssue :input').each(function(){
+             $(this).val($.trim($(this).val()))
+          });
+          $('#newIssue textarea').each(function(){
+             $(this).val($.trim($(this).val()))
+          });
+
+          if ($('#issue_submit').text() === 'Update') {
+            $.ajax({    //update issue
+              type: "PUT",
+              url: currentUrl,
+              data: $(this).serialize()
+            })
+              .done (function(data) { 
+                $(".close").click();
+                let formData = $('#filterForm').serialize();
+                displayIssues(formData);
+                Alert.render('Issue Updated', JSON.stringify(data)); 
+              })
+              .fail (function(xhr) { 
+                Alert.render('Error', xhr.responseJSON.error);
+              })
+          }
+          else {  //post new issue
+            $.ajax({
+              type: "POST",
+              url: currentUrl,
+              data: $(this).serialize()
+            })
+              .done (function(data) { 
+                $(".close").click();
+                Alert.render('Success - Issue Added', JSON.stringify(data, null, 1));
+                displayIssues();
+              })
+              .fail (function(xhr) {
+                Alert.render('Error', xhr.responseJSON.error);
+              })
+          }
+        });
+
+        //Filter issues (find button)
+        $('#filterForm').submit( function(e) {
+          e.preventDefault();
+                    
+          //trim all fields
+          $('#filterForm :input').each(function(){
+             $(this).val($.trim($(this).val()))
+          });
+          let formData = $(this).serialize();
+          displayIssues(formData);
+        });
+
+        //Update issue
+        $('#issueDisplay').on('click','.updateIssue', function(e) {
+          e.stopPropagation();
+          resetForm(); //display new pop up
+
+          //get information for the issue to be updated
+          $.ajax({
+            type: "GET",
+            url: currentUrl,
+            data: {_id: $(this).attr('id')}
+          })
+            .done (function(data) { 
+              populateIssue(data);
+            })
+            .fail (function(xhr) { 
+              Alert.render('Error', xhr.responseJSON.error);
+            })
+          e.preventDefault();
+        });
+
+        //Close Issue
+        $('#issueDisplay').on('click','.closeIssue', function(e) {
+          $.ajax({
+            type: "PUT",
+            url: currentUrl,
+            data: {_id: $(this).attr('id'), open: false}
+          })
+            .done (function(data) { 
+              Alert.render('Issue Closed', JSON.stringify(data)); 
+              let formData = $('#filterForm').serialize();
+              displayIssues(formData);
+            })
+            .fail (function(xhr) { 
+              Alert.render('Error', xhr.responseJSON.error);
+            })
+          
+          e.preventDefault();
+        });
+
+        //Delete issue
+        $('#issueDisplay').on('click','.deleteIssue', function(e) {
+          e.preventDefault();
+          Confirm.render('Delete Issue?', deleteIssue, $(this).attr('id'));
+        });
+
+        function deleteIssue(id) {
+          $.ajax({
+              type: "DELETE",
+              url: currentUrl,
+              data: {_id: id}
+            })
+              .done (function(data) { 
+                Alert.render('Issue Deleted', JSON.stringify(data)); 
+                let formData = $('#filterForm').serialize();
+                displayIssues(formData);
+              })
+              .fail (function(xhr) { 
+                Alert.render('Error', xhr.responseJSON.error);
+              })
+        }
+
+      });
+   </script>
+  </body>
+</html>
