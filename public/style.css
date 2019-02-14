@@ -1,0 +1,307 @@
+:root {
+  --color-lightblue: #b3cce6;
+  --color-medblue: #9fbfdf;
+  --color-darkblue: #336699;
+  --color-yellow: #f0e400;
+  --color-lightgray: #d9d9d9;
+  --color-gray: #737373;
+  --nav-width: 250px;
+  --issue-width: 65%;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Nanum Gothic', sans-serif;
+  background-color: var(--color-lightgray);
+  line-height: 1.5;
+}
+
+#navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--nav-width);
+  background-color: var(--color-darkblue);
+}
+
+#project{
+  text-align: center;
+  padding: 10px;
+  font-size: 1.7em;
+  color: var(--color-yellow);
+  border-bottom: 1px solid var(--color-lightblue);
+}
+
+#navbar ul {
+  display: block;
+  list-style: none;
+  padding-left: 12px;
+  height: 80vh;
+  overflow-y: auto;
+}
+
+#navbar li {
+  cursor: pointer;
+}
+
+.projLink {
+  display: block;
+  text-decoration: none;
+  font-size: 1.25em;
+  color: white;
+  padding: 7px;
+  padding-left: 0;
+  border-bottom: 1px solid var(--color-lightblue);
+  transition: color 275ms ease-out;
+}
+
+.projLink:hover {
+  color: var(--color-yellow);
+  background-color: var(--color-medblue);
+}
+
+#pageHeader {
+  margin-left: var(--nav-width);
+  background: var(--color-lightblue);
+  text-align: center;
+  padding: 9px;
+  font-size: 1.8em;
+  font-weight: 600;
+}
+
+#issueSection {
+  margin-left: var(--nav-width);
+  padding: 0 15px;
+  margin-bottom: 100px;
+}
+
+#projectTitle {
+  padding-top: 25px;
+  text-align: center;
+  font-size: 1.6em;
+  color: var(--color-darkblue);
+}
+
+#totalIssues {
+  font-weight: bold;
+  padding: 3px 0px;
+  background-color: var(--color-gray);
+  color: var(--color-yellow);
+  width: var(--issue-width);
+  margin-top: 3px;
+}
+
+#controls {
+  margin-left: var(--nav-width);
+  background: var(--color-yellow);
+  padding: 3px;
+  display: flex;
+  flex-direction: row;
+}
+
+#filters {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  flex: 33%;
+  font-size: .8em;
+  padding: 4px 0;
+}
+
+#controlBtns {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#newBtn, #findBtn, #findReset, #addProjBtn, #deleteProjBtn {
+  margin: 5px;
+  padding: 3px;
+  width: 100px;
+}
+
+input[type="radio"] {
+  margin: 5px;
+}
+
+/* The pop up form */
+#issueBox {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 11; /* Sit on top */
+  left: calc(((100vw - var(--nav-width))/2) + var(--nav-width));
+  top: 80px;
+  width: 55%; 
+  transform: translate(-50%, 0);
+  border: 1px solid var(--color-lightblue);
+  background-color: var(--color-gray);
+  color: var(--color-yellow);
+  padding: 8px;
+  -webkit-animation-name: animatetop;
+  -webkit-animation-duration: 0.4s;
+  -webkit-animation-timing-function: ease-out;
+  animation-name: animatetop;
+  animation-duration: 0.4s;
+  animation-timing-function: ease-out;    
+}
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+  from {top:-300px; opacity:0} 
+  to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+  from {top:-300px; opacity:0}
+  to {top:0; opacity:1}
+}
+
+#issueBoxHeader {
+  padding-bottom: 8px;
+}
+
+/* Close Button */
+.close {
+  color: white;
+  float: right;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#formContainer{
+  display: grid;
+  grid-template-columns: 20% 80%;
+  grid-row-gap: 4px;
+}
+
+.label{
+  display: inline-block;
+  text-align: right;
+  font-size: 0.9em;
+}
+
+#newIssue {
+  margin-top: 5px;
+}
+
+#issueForm input[type="text"] {
+  width: 95%;
+}
+
+#issueForm textarea{
+  width: 95%;
+  margin-top: 5px;
+}
+
+input[type="checkbox"] {
+  margin: 15px 10px 10px;
+}
+
+#open_close {
+  font-size: 0.85em;
+}
+
+#issue_submit, #issue_reset {
+  padding: 2px;
+  width: 100px;
+}
+
+#issueDisplay {
+  border-collapse: collapse;
+  width: var(--issue-width);
+}
+
+td {
+  border: 1px solid var(--color-lightblue);
+  padding: 8px;
+}
+
+.closed {
+  background-color: var(--color-darkblue);
+  color: var(--color-lightgray);
+}
+
+.open {
+  background-color: var(--color-medblue);
+}
+
+#title {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+.small {
+  font-size: 0.75em;
+ }
+
+.bold {
+   font-weight: 600;
+}
+
+.icons {
+  color: var(--color-gray);
+}
+
+.icons:hover {
+    color: var(--color-yellow);
+}
+
+#dialogOverlay {
+  display: none;
+  opacity: 0.6;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  background: #FFF;
+  z-index: 10;
+  width: 100%;
+}
+
+#dialogBox {
+  display: none;
+  position: fixed;
+  border-radius: 2px;
+  background: var(--color-gray);
+  z-index: 10;
+  width: 500px;
+}
+
+#dialogBoxHead {
+  background: var(--color-lightblue);
+  margin: 3px 2px 2px;
+  text-align: left;
+  padding: 3px 8px;
+  font-weight: bold;
+}
+
+#dialogBoxBody {
+  background: var(--color-darkblue);
+  padding: 10px;
+  color: var(--color-yellow);
+  margin: 2px 2px;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+
+#dialogBoxFoot {
+  background: var(--color-lightblue);
+  margin: 2px;
+  text-align: right;
+  padding: 3px 8px;
+}
