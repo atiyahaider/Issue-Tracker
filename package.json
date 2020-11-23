@@ -16,8 +16,8 @@
     "mocha": "^3.2.0",
     "zombie": "^5.0.5",
     "helmet": "^3.15.0",
-    "mongoose": "^5.4.8",
-    "moment": "^2.24.0"
+    "mongoose": "^5.10.15",
+    "moment": "^2.29.1"
   },
   "engines": {
     "node": "4.4.3"

@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const expect = require('chai').expect;
 
 const issueController = require('../controllers/issueController');
 const projectController = require('../controllers/projectController');
